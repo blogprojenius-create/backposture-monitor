@@ -17,7 +17,9 @@ import {
 
 import { COLORS } from "../styles/colors";
 
-export default function HistoryScreen() {
+export default function HistoryScreen({
+  isGuest = false,
+}) {
   return (
     <ScrollView
       style={styles.scroll}
@@ -30,7 +32,9 @@ export default function HistoryScreen() {
       </Text>
 
       <Text style={styles.subtitle}>
-        Latest posture activity appears first
+        {isGuest
+          ? "History preview — readings are hidden"
+          : "Latest posture activity appears first"}
       </Text>
 
       <View style={styles.todayBadge}>
@@ -39,120 +43,164 @@ export default function HistoryScreen() {
         </Text>
       </View>
 
-      {historyData.map((item) => {
-        const good = item.type === "good";
+      {isGuest
+        ? historyData.map((item) => (
+            <GuestHistoryCard
+              key={item.id}
+            />
+          ))
+        : historyData.map((item) => (
+            <RealHistoryCard
+              key={item.id}
+              item={item}
+            />
+          ))}
 
-        return (
-          <View
-            key={item.id}
+      {isGuest && (
+        <View style={styles.loginCard}>
+
+          <Ionicons
+            name="lock-closed-outline"
+            size={20}
+            color={COLORS.purpleDark}
+          />
+
+          <Text style={styles.loginText}>
+            Login to view your posture history,
+            notifications and readings.
+          </Text>
+
+        </View>
+      )}
+
+    </ScrollView>
+  );
+}
+
+function GuestHistoryCard() {
+  return (
+    <View style={styles.card}>
+
+      <View style={styles.iconCircle}>
+        <Ionicons
+          name="lock-closed-outline"
+          size={21}
+          color={COLORS.purpleDark}
+        />
+      </View>
+
+      <View style={styles.info}>
+
+        <View style={styles.row}>
+          <Text style={styles.hiddenTitle}>
+            Condition
+          </Text>
+
+          <Text style={styles.hiddenValue}>
+            —
+          </Text>
+        </View>
+
+        <Text style={styles.detail}>
+          Time: —
+        </Text>
+
+        <Text style={styles.detail}>
+          Back Angle: —
+        </Text>
+
+        <Text style={styles.detail}>
+          Notification: —
+        </Text>
+
+      </View>
+
+    </View>
+  );
+}
+
+function RealHistoryCard({
+  item,
+}) {
+  const good = item.type === "good";
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          borderLeftColor: good
+            ? COLORS.green
+            : COLORS.coral,
+        },
+      ]}
+    >
+
+      <View
+        style={[
+          styles.iconCircle,
+          {
+            backgroundColor: good
+              ? "#E9F8EF"
+              : "#FFF0EC",
+          },
+        ]}
+      >
+
+        <Ionicons
+          name={
+            good
+              ? "checkmark"
+              : "warning-outline"
+          }
+          size={22}
+          color={
+            good
+              ? COLORS.green
+              : COLORS.coral
+          }
+        />
+
+      </View>
+
+      <View style={styles.info}>
+
+        <View style={styles.row}>
+          <Text
             style={[
-              styles.card,
+              styles.hiddenTitle,
               {
-                borderLeftColor: good
+                color: good
                   ? COLORS.green
                   : COLORS.coral,
               },
             ]}
           >
+            {item.condition}
+          </Text>
 
-            <View
-              style={[
-                styles.iconCircle,
-                {
-                  backgroundColor: good
-                    ? "#E9F8EF"
-                    : "#FFF0EC",
-                },
-              ]}
-            >
-              <Ionicons
-                name={
-                  good
-                    ? "checkmark"
-                    : "warning-outline"
-                }
-                size={22}
-                color={
-                  good
-                    ? COLORS.green
-                    : COLORS.coral
-                }
-              />
-            </View>
+          <Text style={styles.time}>
+            {item.time}
+          </Text>
+        </View>
 
-            <View style={styles.info}>
+        <Text style={styles.detail}>
+          Back angle: {item.angle}°
+        </Text>
 
-              <View style={styles.topRow}>
+        <Text style={styles.detail}>
+          Duration: {item.duration}
+        </Text>
 
-                <Text
-                  style={[
-                    styles.condition,
-                    {
-                      color: good
-                        ? COLORS.green
-                        : COLORS.coral,
-                    },
-                  ]}
-                >
-                  {item.condition}
-                </Text>
+        <Text style={styles.detail}>
+          {good
+            ? `Last updated: ${item.lastUpdated}`
+            : `Notification: ${item.notificationTime}`}
+        </Text>
 
-                <Text style={styles.time}>
-                  {item.time}
-                </Text>
+      </View>
 
-              </View>
-
-              <Text style={styles.angle}>
-                Back angle: {item.angle}°
-              </Text>
-
-              <Text style={styles.duration}>
-                Duration: {item.duration}
-              </Text>
-
-              {good ? (
-                <View style={styles.metaRow}>
-                  <Ionicons
-                    name="refresh-outline"
-                    size={13}
-                    color={COLORS.muted}
-                  />
-
-                  <Text style={styles.metaText}>
-                    Last updated:{" "}
-                    {item.lastUpdated}
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.metaRow}>
-                  <Ionicons
-                    name="notifications-outline"
-                    size={13}
-                    color={COLORS.coral}
-                  />
-
-                  <Text
-                    style={[
-                      styles.metaText,
-                      {
-                        color: COLORS.coral,
-                      },
-                    ]}
-                  >
-                    Notification:{" "}
-                    {item.notificationTime}
-                  </Text>
-                </View>
-              )}
-
-            </View>
-
-          </View>
-        );
-      })}
-
-    </ScrollView>
+    </View>
   );
 }
 
@@ -181,14 +229,10 @@ const styles = StyleSheet.create({
 
   todayBadge: {
     alignSelf: "flex-start",
-
     backgroundColor: "#F2E9FF",
-
     borderRadius: 20,
-
     paddingHorizontal: 12,
     paddingVertical: 7,
-
     marginTop: 20,
     marginBottom: 13,
   },
@@ -206,7 +250,8 @@ const styles = StyleSheet.create({
 
     borderRadius: 17,
 
-    borderLeftWidth: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.purpleDark,
 
     padding: 15,
 
@@ -218,6 +263,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
 
+    backgroundColor: "#F2E9FF",
+
     alignItems: "center",
     justifyContent: "center",
   },
@@ -227,44 +274,49 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-  topRow: {
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
 
-  condition: {
-    fontSize: 14,
+  hiddenTitle: {
+    color: COLORS.purpleDark,
+    fontSize: 15,
     fontWeight: "900",
-    flex: 1,
+  },
+
+  hiddenValue: {
+    color: COLORS.muted,
+    fontSize: 15,
+    fontWeight: "800",
   },
 
   time: {
-    fontSize: 12,
-    color: COLORS.muted,
-  },
-
-  angle: {
-    color: COLORS.text,
-    fontSize: 13,
-    marginTop: 8,
-  },
-
-  duration: {
     color: COLORS.muted,
     fontSize: 12,
-    marginTop: 4,
   },
 
-  metaRow: {
+  detail: {
+    color: COLORS.muted,
+    fontSize: 12,
+    marginTop: 7,
+  },
+
+  loginCard: {
+    backgroundColor: "#F5F0FF",
+    borderRadius: 15,
+    padding: 15,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 5,
   },
 
-  metaText: {
+  loginText: {
+    flex: 1,
     color: COLORS.muted,
-    fontSize: 11,
-    marginLeft: 5,
+    fontSize: 12,
+    lineHeight: 18,
+    marginLeft: 9,
   },
 });
